@@ -1,0 +1,2490 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataminoBot Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,300&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN SYSTEM — Refined Financial Luxury
+   Fraunces (editorial serif) + Jakarta Sans
+   Dark: deep navy-black with gold accents
+   Light: warm cream with deep indigo
+═══════════════════════════════════════════════ */
+
+:root {
+  --ease: cubic-bezier(.4,0,.2,1);
+  --ease-spring: cubic-bezier(.34,1.56,.64,1);
+}
+
+[data-theme="dark"] {
+  --bg:       #080b12;
+  --bg2:      #0d1220;
+  --surface:  #111827;
+  --card:     #141d2e;
+  --card2:    #1a2540;
+  --border:   #1f2d45;
+  --border2:  #253350;
+  --text:     #e8eaf5;
+  --text2:    #8892b0;
+  --text3:    #4a5578;
+  --gold:     #f0b429;
+  --gold-dim: rgba(240,180,41,.1);
+  --gold-glow:rgba(240,180,41,.25);
+  --teal:     #2dd4bf;
+  --teal-dim: rgba(45,212,191,.1);
+  --rose:     #fb7185;
+  --rose-dim: rgba(251,113,133,.1);
+  --violet:   #a78bfa;
+  --violet-dim:rgba(167,139,250,.1);
+  --green:    #34d399;
+  --green-dim:rgba(52,211,153,.1);
+  --shadow:   0 4px 24px rgba(0,0,0,.4);
+  --shadow2:  0 2px 8px rgba(0,0,0,.3);
+}
+
+[data-theme="light"] {
+  --bg:       #f5f0e8;
+  --bg2:      #ede8de;
+  --surface:  #faf7f2;
+  --card:     #ffffff;
+  --card2:    #f5f0e8;
+  --border:   #e0d8cc;
+  --border2:  #ccc4b4;
+  --text:     #1a1f2e;
+  --text2:    #4a5578;
+  --text3:    #8892b0;
+  --gold:     #c47f00;
+  --gold-dim: rgba(196,127,0,.08);
+  --gold-glow:rgba(196,127,0,.2);
+  --teal:     #0d9488;
+  --teal-dim: rgba(13,148,136,.08);
+  --rose:     #e11d48;
+  --rose-dim: rgba(225,29,72,.08);
+  --violet:   #7c3aed;
+  --violet-dim:rgba(124,58,237,.08);
+  --green:    #059669;
+  --green-dim:rgba(5,150,105,.08);
+  --shadow:   0 4px 24px rgba(0,0,0,.08);
+  --shadow2:  0 2px 8px rgba(0,0,0,.06);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background .3s var(--ease), color .3s var(--ease);
+}
+
+/* Noise texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: .4;
+}
+
+/* Ambient glow */
+body::before {
+  content: '';
+  position: fixed;
+  top: -20%;
+  left: -10%;
+  width: 70vw;
+  height: 70vh;
+  background: radial-gradient(ellipse, rgba(240,180,41,.04) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+  transition: all .3s;
+}
+[data-theme="light"] body::before { background: radial-gradient(ellipse, rgba(124,58,237,.04) 0%, transparent 60%); }
+
+/* ── LAYOUT ─────────────────────────────────────── */
+.shell { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* ── SIDEBAR ────────────────────────────────────── */
+.sidebar {
+  width: 260px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 200;
+  transition: transform .35s var(--ease), background .3s;
+  overflow: hidden;
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 200px;
+  background: linear-gradient(to top, var(--gold-dim), transparent);
+  pointer-events: none;
+}
+
+.sb-top {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sb-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sb-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--gold), #e87f00);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px var(--gold-glow);
+  flex-shrink: 0;
+}
+
+.sb-name {
+  font-family: 'Fraunces', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+}
+
+.sb-name span { color: var(--gold); }
+.sb-ver { font-size: .6rem; font-family: 'Fira Code', monospace; color: var(--text3); margin-top: 2px; }
+
+/* Salary widget */
+.salary-widget {
+  background: var(--gold-dim);
+  border: 1px solid rgba(240,180,41,.15);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all .2s;
+}
+[data-theme="light"] .salary-widget { border-color: rgba(196,127,0,.2); }
+.salary-widget:hover { border-color: var(--gold); }
+.salary-widget .sw-label { font-size: .6rem; font-family: 'Fira Code', monospace; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; }
+.salary-widget .sw-val { font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 700; color: var(--gold); margin-top: 3px; letter-spacing: -.03em; }
+.salary-widget .sw-sub { font-size: .7rem; color: var(--text3); margin-top: 1px; }
+
+/* Nav */
+.sb-nav { flex: 1; padding: 16px 14px; overflow-y: auto; }
+.sb-nav::-webkit-scrollbar { display: none; }
+
+.nav-section {
+  font-size: .6rem;
+  font-family: 'Fira Code', monospace;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .15em;
+  padding: 14px 10px 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--text2);
+  transition: all .18s var(--ease);
+  margin-bottom: 2px;
+  position: relative;
+  border: 1px solid transparent;
+}
+
+.nav-item:hover {
+  background: var(--card);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.nav-item.active {
+  background: var(--gold-dim);
+  color: var(--gold);
+  border-color: rgba(240,180,41,.2);
+  font-weight: 600;
+}
+[data-theme="light"] .nav-item.active { color: var(--gold); }
+
+.nav-item .ni { width: 18px; text-align: center; font-size: .95rem; flex-shrink: 0; }
+
+/* Theme toggle + sidebar footer */
+.sb-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.theme-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--card);
+  color: var(--text2);
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.theme-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px var(--green-dim);
+  animation: pulse-dot 2.5s ease-in-out infinite;
+}
+@keyframes pulse-dot { 0%,100%{box-shadow:0 0 0 3px var(--green-dim)}50%{box-shadow:0 0 0 6px transparent} }
+
+/* ── MAIN ───────────────────────────────────────── */
+.main {
+  margin-left: 260px;
+  flex: 1;
+  min-width: 0;
+  padding: 36px 40px 100px;
+  transition: margin .35s var(--ease);
+}
+
+@media(max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; padding: 20px; }
+  .hamburger { display: flex !important; }
+}
+
+/* ── PAGE HEADERS ───────────────────────────────── */
+.page-header {
+  margin-bottom: 32px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-title {
+  font-family: 'Fraunces', serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: -.04em;
+  line-height: 1;
+  color: var(--text);
+}
+
+.page-sub {
+  font-size: .875rem;
+  color: var(--text3);
+  margin-top: 6px;
+  font-style: italic;
+  font-family: 'Fraunces', serif;
+}
+
+/* ── PAGES ──────────────────────────────────────── */
+.page { display: none; }
+.page.active {
+  display: block;
+  animation: fadeUp .35s var(--ease) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── CARDS ──────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  transition: border-color .2s, box-shadow .2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover { border-color: var(--border2); box-shadow: var(--shadow2); }
+
+.card2 {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+/* ── GRIDS ──────────────────────────────────────── */
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+.g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+@media(max-width:1200px){ .g4 { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:700px){ .g4,.g3,.g2 { grid-template-columns: 1fr; } }
+
+/* ── STAT CARDS ─────────────────────────────────── */
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+  transition: all .2s;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+.stat-card .accent-line {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+}
+
+.sc-label {
+  font-size: .65rem;
+  font-family: 'Fira Code', monospace;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  margin-bottom: 12px;
+  padding-left: 12px;
+}
+
+.sc-val {
+  font-family: 'Fraunces', serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -.04em;
+  padding-left: 12px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.sc-sub {
+  font-size: .72rem;
+  color: var(--text3);
+  padding-left: 12px;
+}
+
+.sc-bar {
+  height: 2px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-top: 14px;
+  overflow: hidden;
+}
+
+.sc-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1.2s var(--ease);
+}
+
+/* ── AI PANEL ───────────────────────────────────── */
+.ai-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 28px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-panel::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, var(--gold-dim), transparent 70%);
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+.ai-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.ai-orb {
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold), #d97706);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 0 0 0 var(--gold-glow);
+  animation: orb-pulse 3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes orb-pulse {
+  0%,100% { box-shadow: 0 0 0 0 var(--gold-glow); }
+  50% { box-shadow: 0 0 0 10px transparent; }
+}
+
+.ai-name { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1rem; }
+.ai-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: .65rem; font-family: 'Fira Code', monospace;
+  color: var(--green); margin-top: 3px;
+}
+.ai-badge::before {
+  content: '';
+  width: 5px; height: 5px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+
+.ai-msg {
+  font-size: .9rem;
+  line-height: 1.7;
+  min-height: 40px;
+  margin-bottom: 18px;
+  color: var(--text2);
+}
+
+.ai-msg .hl { color: var(--gold); font-weight: 600; }
+.ai-msg .danger { color: var(--rose); font-weight: 600; }
+.ai-msg .ok { color: var(--green); font-weight: 600; }
+
+.chat-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+/* ── INPUTS & BUTTONS ───────────────────────────── */
+.inp {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: .875rem;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  width: 100%;
+}
+.inp:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-dim);
+}
+.inp::placeholder { color: var(--text3); }
+.inp[type="password"] { font-family: 'Fira Code', monospace; letter-spacing: .08em; }
+
+select.inp option { background: var(--card); }
+textarea.inp { resize: vertical; min-height: 80px; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: all .2s var(--ease);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold), #d97706);
+  color: #1a1000;
+  box-shadow: 0 2px 12px var(--gold-glow);
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--gold-glow); }
+.btn-gold:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+}
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+
+.btn-ghost {
+  background: var(--card2);
+  color: var(--text2);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--border); color: var(--text); }
+
+.btn-danger {
+  background: var(--rose-dim);
+  color: var(--rose);
+  border: 1px solid rgba(251,113,133,.2);
+}
+.btn-danger:hover { background: var(--rose); color: white; }
+
+.btn-full { width: 100%; justify-content: center; }
+.btn-sm { padding: 7px 14px; font-size: .78rem; border-radius: 9px; }
+
+/* ── CHIPS ──────────────────────────────────────── */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-size: .72rem;
+  font-family: 'Fira Code', monospace;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 6px 14px;
+  cursor: pointer;
+  color: var(--text3);
+  transition: all .18s;
+}
+.chip:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+
+/* ── FORM GRID ──────────────────────────────────── */
+.fg { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.fg.fg3 { grid-template-columns: 1fr 1fr 1fr; }
+.full { grid-column: 1/-1; }
+
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field label {
+  font-size: .65rem;
+  font-family: 'Fira Code', monospace;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+/* ── TABLE ──────────────────────────────────────── */
+.tbl-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: var(--card2); }
+th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: .62rem;
+  font-family: 'Fira Code', monospace;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 12px 16px;
+  font-size: .85rem;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+  color: var(--text2);
+}
+[data-theme="light"] td { border-bottom-color: var(--border); }
+tr:last-child td { border-bottom: none; }
+tbody tr { transition: background .15s; }
+tbody tr:hover td { background: var(--card2); color: var(--text); }
+
+/* ── BADGES ─────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: .68rem;
+  font-family: 'Fira Code', monospace;
+  font-weight: 500;
+}
+.b-gold { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(240,180,41,.15); }
+.b-teal { background: var(--teal-dim); color: var(--teal); }
+.b-rose { background: var(--rose-dim); color: var(--rose); }
+.b-violet { background: var(--violet-dim); color: var(--violet); }
+.b-green { background: var(--green-dim); color: var(--green); }
+
+/* ── PROGRESS BARS ──────────────────────────────── */
+.pbar { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.pfill { height: 100%; border-radius: 4px; transition: width 1.2s var(--ease); }
+
+.budget-item { margin-bottom: 18px; }
+.budget-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+.budget-cat { font-size: .85rem; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+.budget-amt { font-family: 'Fira Code', monospace; font-size: .78rem; color: var(--text3); }
+.budget-over { color: var(--rose) !important; font-weight: 700; }
+
+/* ── GOAL BAR ───────────────────────────────────── */
+.gbar { background: var(--border); border-radius: 100px; height: 8px; overflow: hidden; margin: 10px 0 6px; }
+.gfill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--teal));
+  border-radius: 100px;
+  transition: width 1.4s var(--ease);
+  position: relative;
+}
+.gfill::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 30px;
+  background: rgba(255,255,255,.3);
+  border-radius: 100px;
+  animation: shimmer 2s ease-in-out infinite;
+}
+@keyframes shimmer { 0%,100%{opacity:.2}50%{opacity:.7} }
+
+/* ── CHAT DISPLAY ───────────────────────────────── */
+.chat-log {
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+  margin-bottom: 18px;
+  scroll-behavior: smooth;
+}
+.chat-log::-webkit-scrollbar { width: 4px; }
+.chat-log::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+.msg-user {
+  align-self: flex-end;
+  background: var(--gold-dim);
+  border: 1px solid rgba(240,180,41,.15);
+  border-radius: 18px 18px 4px 18px;
+  padding: 12px 16px;
+  max-width: 78%;
+  font-size: .875rem;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.msg-ai {
+  align-self: flex-start;
+  display: flex;
+  gap: 10px;
+  max-width: 84%;
+}
+
+.msg-ai-avatar {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--gold), #d97706);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.msg-ai-bubble {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 16px;
+  font-size: .875rem;
+  line-height: 1.7;
+  color: var(--text2);
+}
+
+/* ── THINKING ───────────────────────────────────── */
+.thinking { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
+.thinking span {
+  width: 6px; height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+  animation: bounce 1.2s ease-in-out infinite;
+}
+.thinking span:nth-child(2){animation-delay:.2s}
+.thinking span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-7px)}}
+
+/* ── SECTION DIVIDER ────────────────────────────── */
+.sec-div {
+  font-family: 'Fira Code', monospace;
+  font-size: .62rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .15em;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 28px 0 18px;
+}
+.sec-div::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sec-title { font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 600; letter-spacing: -.02em; }
+
+/* ── HEATMAP ────────────────────────────────────── */
+.heatmap { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; margin-top: 10px; }
+.hc {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: var(--border);
+  cursor: pointer;
+  transition: transform .15s, opacity .15s;
+  position: relative;
+}
+.hc:hover { transform: scale(1.3); z-index: 2; opacity: .9; }
+
+/* ── CHART ──────────────────────────────────────── */
+.chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 90px; }
+.cbar {
+  flex: 1;
+  border-radius: 5px 5px 0 0;
+  min-height: 4px;
+  cursor: pointer;
+  transition: opacity .2s;
+  position: relative;
+}
+.cbar:hover { opacity: .8; }
+.cbar:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: 110%; left: 50%;
+  transform: translateX(-50%);
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: .68rem;
+  font-family: 'Fira Code', monospace;
+  white-space: nowrap;
+  z-index: 10;
+  color: var(--text);
+}
+.chart-labels { display: flex; gap: 6px; margin-top: 6px; }
+.chart-labels span { flex: 1; text-align: center; font-size: .6rem; font-family: 'Fira Code', monospace; color: var(--text3); }
+
+/* ── TOAST ──────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 14px 20px;
+  font-size: .85rem;
+  max-width: 360px;
+  z-index: 9000;
+  transform: translateY(120px);
+  opacity: 0;
+  transition: all .4s var(--ease);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+#toast.t-ok { border-color: rgba(52,211,153,.3); }
+#toast.t-err { border-color: rgba(251,113,133,.3); }
+#toast.t-info { border-color: rgba(240,180,41,.3); }
+
+/* ── MODAL ──────────────────────────────────────── */
+.modal-bg {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(6px);
+  z-index: 800;
+  align-items: center;
+  justify-content: center;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 24px;
+  padding: 32px;
+  width: min(520px, 95vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+  animation: modalIn .3s var(--ease-spring);
+}
+@keyframes modalIn { from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)} }
+.modal-title { font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 24px; letter-spacing: -.03em; }
+
+/* ── EMPTY ──────────────────────────────────────── */
+.empty { text-align: center; padding: 40px 20px; }
+.empty .ei { font-size: 2.5rem; margin-bottom: 10px; }
+.empty p { font-size: .85rem; color: var(--text3); font-style: italic; font-family: 'Fraunces', serif; }
+
+/* ── DELETE BTN ─────────────────────────────────── */
+.del-btn {
+  background: none; border: none;
+  color: var(--text3); cursor: pointer;
+  padding: 5px 9px; border-radius: 7px;
+  transition: all .15s; font-size: .8rem;
+}
+.del-btn:hover { background: var(--rose-dim); color: var(--rose); }
+
+/* ── HAMBURGER ──────────────────────────────────── */
+.hamburger {
+  display: none;
+  position: fixed;
+  top: 18px; left: 18px;
+  z-index: 300;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  flex-direction: column;
+  gap: 4px;
+}
+.hamburger span { width: 18px; height: 2px; background: var(--text); border-radius: 2px; transition: all .2s; }
+
+/* ── SETUP SCREEN ───────────────────────────────── */
+#setupScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.setup-box {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 28px;
+  padding: 48px;
+  width: min(560px, 100%);
+  box-shadow: var(--shadow);
+  animation: fadeUp .5s var(--ease);
+}
+
+.setup-logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.setup-box h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: -.05em;
+  margin-bottom: 6px;
+}
+.setup-box h1 span { color: var(--gold); }
+.setup-box .setup-sub {
+  font-size: .9rem;
+  color: var(--text3);
+  margin-bottom: 36px;
+  font-style: italic;
+  font-family: 'Fraunces', serif;
+}
+
+.setup-section {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.setup-section-title {
+  font-size: .65rem;
+  font-family: 'Fira Code', monospace;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .15em;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.key-note {
+  font-size: .72rem;
+  color: var(--text3);
+  font-style: italic;
+  font-family: 'Fraunces', serif;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--gold-dim);
+  border-radius: 8px;
+  border: 1px solid rgba(240,180,41,.1);
+}
+
+/* ── LOADING ────────────────────────────────────── */
+#loadScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+  gap: 18px;
+}
+
+.load-logo {
+  font-family: 'Fraunces', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -.04em;
+}
+.load-logo span { color: var(--gold); }
+
+/* ── DAY RECORD TX ──────────────────────────────── */
+.tx-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.tx-row:last-child { border-bottom: none; }
+.tx-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem;
+  flex-shrink: 0;
+}
+.tx-info { flex: 1; min-width: 0; }
+.tx-name { font-size: .875rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-meta { font-size: .7rem; color: var(--text3); font-family: 'Fira Code', monospace; margin-top: 2px; }
+.tx-amt { font-family: 'Fira Code', monospace; font-size: .9rem; font-weight: 500; flex-shrink: 0; }
+
+/* ── MONTH NAV ──────────────────────────────────── */
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.month-label { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -.04em; }
+
+/* ── MEMORY ENTRY ───────────────────────────────── */
+.mem-entry {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: .82rem;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.mem-user { background: var(--gold-dim); border: 1px solid rgba(240,180,41,.12); }
+.mem-ai { background: var(--card2); border: 1px solid var(--border); color: var(--text2); }
+.mem-role { font-size: .62rem; font-family: 'Fira Code', monospace; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .1em; }
+
+/* ── GOAL CARD ──────────────────────────────────── */
+.goal-card {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 12px;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SETUP SCREEN (shown when no keys) ═════════ -->
+<div id="setupScreen">
+  <div class="setup-box">
+    <div class="setup-logo">
+      <div class="sb-icon">🤖</div>
+      <div>
+        <div style="font-family:'Fraunces',serif;font-size:1.5rem;font-weight:700;letter-spacing:-.04em">Datamino<span style="color:var(--gold)">Bot</span> <span style="color:var(--text3);font-size:.9rem">Pro</span></div>
+        <div style="font-size:.65rem;font-family:'Fira Code',monospace;color:var(--text3)">AI Finance System · First Time Setup</div>
+      </div>
+      <button class="theme-btn" style="margin-left:auto" onclick="toggleTheme()">🌓 Theme</button>
+    </div>
+    <div class="setup-sub">Connect your accounts to begin. All keys are stored locally in your browser only — never shared.</div>
+
+    <div class="setup-section">
+      <div class="setup-section-title">🤖 AI Configuration</div>
+      <div class="fg" style="grid-template-columns:1fr;">
+        <div class="field">
+          <label>OpenAI API Key</label>
+          <input class="inp" type="password" id="s_oai" placeholder="sk-proj-..." />
+        </div>
+        <div class="field" style="margin-top:8px">
+          <label>AI Model</label>
+          <select class="inp" id="s_model">
+            <option value="gpt-5-nano-2025-08-07">gpt-5-nano (fastest, cheapest)</option>
+            <option value="gpt-4o-mini">gpt-4o-mini (balanced)</option>
+            <option value="gpt-4o">gpt-4o (most capable)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-section">
+      <div class="setup-section-title">🗄️ Supabase Database (for persistent memory)</div>
+      <div class="fg" style="grid-template-columns:1fr;gap:12px">
+        <div class="field">
+          <label>Supabase Project URL</label>
+          <input class="inp" type="text" id="s_sburl" placeholder="https://xxxx.supabase.co" />
+        </div>
+        <div class="field">
+          <label>Supabase Anon / Public Key</label>
+          <input class="inp" type="password" id="s_sbanon" placeholder="eyJhbGci..." />
+        </div>
+      </div>
+      <div class="key-note">💡 Optional but recommended. Without it, data is saved in your browser (clears if you clear browser storage).</div>
+    </div>
+
+    <div class="setup-section">
+      <div class="setup-section-title">💰 Financial Profile</div>
+      <div class="fg">
+        <div class="field">
+          <label>Monthly Salary (PKR)</label>
+          <input class="inp" type="number" id="s_salary" value="185000" placeholder="185000" />
+        </div>
+        <div class="field">
+          <label>Monthly Savings Target</label>
+          <input class="inp" type="number" id="s_savings" value="37000" placeholder="37000" />
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-gold btn-full" style="margin-top:8px;padding:16px;font-size:1rem" onclick="completeSetup()">
+      🚀 Launch DataminoBot Pro
+    </button>
+    <div style="text-align:center;margin-top:12px;font-size:.75rem;color:var(--text3);font-style:italic;font-family:'Fraunces',serif">
+      Your data stays in your browser. No tracking. No ads.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP (hidden until setup) ════════════ -->
+<div id="appShell" style="display:none">
+<div class="hamburger" id="hamburger" onclick="toggleSidebar()">
+  <span></span><span></span><span></span>
+</div>
+
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-top">
+    <div class="sb-brand">
+      <div class="sb-icon">🤖</div>
+      <div>
+        <div class="sb-name">Datamino<span>Bot</span></div>
+        <div class="sb-ver">Pro · v2.0</div>
+      </div>
+      <button class="theme-btn" style="margin-left:auto;padding:7px 10px;font-size:.75rem" onclick="toggleTheme()" title="Toggle theme">🌓</button>
+    </div>
+    <div class="salary-widget" onclick="goPage('admin')">
+      <div class="sw-label">Monthly Salary</div>
+      <div class="sw-val" id="sbSalary">₨185,000</div>
+      <div class="sw-sub">Click to edit ↗</div>
+    </div>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="goPage('dashboard')"><span class="ni">📊</span>Dashboard</div>
+    <div class="nav-item" onclick="goPage('ai')"><span class="ni">🤖</span>AI Assistant</div>
+
+    <div class="nav-section">Money</div>
+    <div class="nav-item" onclick="goPage('expenses')"><span class="ni">💸</span>Expenses</div>
+    <div class="nav-item" onclick="goPage('records')"><span class="ni">📅</span>Daily Records</div>
+    <div class="nav-item" onclick="goPage('monthly')"><span class="ni">📆</span>Monthly View</div>
+
+    <div class="nav-section">Planning</div>
+    <div class="nav-item" onclick="goPage('budgets')"><span class="ni">🎯</span>Budgets</div>
+    <div class="nav-item" onclick="goPage('savings')"><span class="ni">🏦</span>Savings Goals</div>
+
+    <div class="nav-section">System</div>
+    <div class="nav-item" onclick="goPage('email')"><span class="ni">📧</span>Email Reports</div>
+    <div class="nav-item" onclick="goPage('memory')"><span class="ni">🧠</span>AI Memory</div>
+    <div class="nav-item" onclick="goPage('admin')"><span class="ni">⚙️</span>Admin Panel</div>
+  </nav>
+
+  <div class="sb-footer">
+    <div class="status-dot"></div>
+    <span style="font-size:.72rem;font-family:'Fira Code',monospace;color:var(--text3)" id="sbStatus">Connected</span>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+<!-- LOADING -->
+<div id="loadScreen">
+  <div class="load-logo">Datamino<span>Bot</span></div>
+  <div class="thinking"><span></span><span></span><span></span></div>
+  <div style="font-size:.78rem;font-family:'Fira Code',monospace;color:var(--text3)" id="loadMsg">Initializing...</div>
+</div>
+
+<!-- ══ DASHBOARD ══════════════════════════════════ -->
+<div class="page" id="page-dashboard">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub" id="dashDate">Loading date...</div>
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="openAddModal()">+ Log Expense</button>
+  </div>
+
+  <div class="g4">
+    <div class="stat-card">
+      <div class="accent-line" style="background:var(--gold)"></div>
+      <div class="sc-label">Total Budget</div>
+      <div class="sc-val" style="color:var(--gold)" id="s_budget">₨185,000</div>
+      <div class="sc-sub">This month's salary</div>
+      <div class="sc-bar"><div class="sc-fill" style="background:var(--gold);width:100%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-line" style="background:var(--rose)"></div>
+      <div class="sc-label">Spent</div>
+      <div class="sc-val" style="color:var(--rose)" id="s_spent">₨0</div>
+      <div class="sc-sub" id="s_spent_pct">0% of spendable</div>
+      <div class="sc-bar"><div class="sc-fill" id="s_spent_bar" style="background:var(--rose);width:0%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-line" style="background:var(--violet)"></div>
+      <div class="sc-label">Savings This Month</div>
+      <div class="sc-val" style="color:var(--violet)" id="s_saved">₨37,000</div>
+      <div class="sc-sub" id="s_saved_sub">Target locked in</div>
+      <div class="sc-bar"><div class="sc-fill" id="s_saved_bar" style="background:var(--violet);width:20%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-line" style="background:var(--teal)"></div>
+      <div class="sc-label">Remaining</div>
+      <div class="sc-val" id="s_remain" style="color:var(--teal)">₨148,000</div>
+      <div class="sc-sub" id="s_remain_sub">Available to spend</div>
+      <div class="sc-bar"><div class="sc-fill" id="s_remain_bar" style="background:var(--teal);width:100%"></div></div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="sec-head">
+        <div class="sec-title">Today's Activity</div>
+        <span style="font-family:'Fira Code',monospace;font-size:.75rem;color:var(--rose)" id="todayTotalBadge">₨0</span>
+      </div>
+      <div id="todayList"><div class="empty"><div class="ei">📭</div><p>Nothing logged today yet</p></div></div>
+    </div>
+    <div class="card">
+      <div class="sec-head"><div class="sec-title">Category Breakdown</div></div>
+      <div id="catBreakdown"><div class="empty"><div class="ei">📊</div><p>Add expenses to see breakdown</p></div></div>
+    </div>
+  </div>
+
+  <div class="ai-panel">
+    <div class="ai-head">
+      <div class="ai-orb">🤖</div>
+      <div>
+        <div class="ai-name">DataminoBot</div>
+        <div class="ai-badge" id="modelBadge">gpt-5-nano · Active</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="goPage('ai')">Open Chat →</button>
+      </div>
+    </div>
+    <div class="ai-msg" id="dashAIMsg"><div class="thinking"><span></span><span></span><span></span></div></div>
+    <div class="chips">
+      <div class="chip" onclick="qChat('How am I doing this month?')">📊 Monthly status</div>
+      <div class="chip" onclick="qChat('Give me today\\'s spending advice')">💡 Today's tip</div>
+      <div class="chip" onclick="qChat('Am I on track for savings?')">🎯 Savings check</div>
+      <div class="chip" onclick="qChat('What should I cut back on?')">✂️ Cut back</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-head"><div class="sec-title">7-Day Spending</div><span style="font-size:.72rem;color:var(--text3);font-family:'Fira Code',monospace">Daily totals</span></div>
+    <div class="chart-bars" id="weekChart"></div>
+    <div class="chart-labels" id="weekLabels"></div>
+  </div>
+</div>
+
+<!-- ══ AI ASSISTANT ═══════════════════════════════ -->
+<div class="page" id="page-ai">
+  <div class="page-header">
+    <div>
+      <div class="page-title">AI Assistant</div>
+      <div class="page-sub">Persistent memory · Knows your full financial history</div>
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="clearMemory()">🗑 Clear Memory</button>
+  </div>
+
+  <div class="card">
+    <div class="ai-head" style="margin-bottom:0;padding-bottom:18px;border-bottom:1px solid var(--border)">
+      <div class="ai-orb">🤖</div>
+      <div>
+        <div class="ai-name">DataminoBot</div>
+        <div class="ai-badge" id="modelBadge2">Active</div>
+      </div>
+    </div>
+    <div class="chat-log" id="chatLog" style="margin-top:16px">
+      <div class="empty"><div class="ei">💬</div><p>Ask me anything about your finances!</p></div>
+    </div>
+    <div class="chat-row">
+      <input type="text" class="inp" id="chatInp" placeholder="e.g. 'I spent 2500 on food' or 'Should I buy a new phone?'" />
+      <button class="btn btn-gold" id="chatBtn" onclick="sendChat()">Send →</button>
+    </div>
+    <div class="chips" style="margin-top:10px">
+      <div class="chip" onclick="aiQ('Analyze my spending patterns')">🔍 Spending analysis</div>
+      <div class="chip" onclick="aiQ('Give me a savings plan for next 3 months')">📋 3-month plan</div>
+      <div class="chip" onclick="aiQ('Am I likely to overspend this month?')">⚠️ Forecast</div>
+      <div class="chip" onclick="aiQ('What investment should I start with my savings?')">📈 Investments</div>
+      <div class="chip" onclick="aiQ('How much can I spend per day for the rest of the month?')">📅 Daily budget</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXPENSES ════════════════════════════════════ -->
+<div class="page" id="page-expenses">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Expenses</div>
+      <div class="page-sub">Log and manage all transactions</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:18px">Add Expense</div>
+      <div class="fg">
+        <div class="field">
+          <label>Amount (PKR)</label>
+          <input class="inp" type="number" id="eAmt" placeholder="3500" />
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <select class="inp" id="eCat">
+            <option>🍔 Food & Dining</option><option>🚗 Transport</option>
+            <option>🛍️ Shopping</option><option>🎮 Entertainment</option>
+            <option>📱 Subscriptions</option><option>🏠 Rent</option>
+            <option>🎓 University Fee</option><option>💊 Health</option><option>📦 Other</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>Description</label>
+          <input class="inp" type="text" id="eDesc" placeholder="Foodpanda order, Careem ride..." />
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input class="inp" type="date" id="eDate" />
+        </div>
+        <div class="field">
+          <label>Payment Method</label>
+          <select class="inp" id="eMethod">
+            <option>Cash</option><option>Bank Transfer</option>
+            <option>JazzCash</option><option>Easypaisa</option><option>Card</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>Notes (optional)</label>
+          <textarea class="inp" id="eNotes" placeholder="Any extra context..." style="min-height:60px"></textarea>
+        </div>
+        <button class="btn btn-gold btn-full full" onclick="addExpense()">➕ Log + Get AI Feedback</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:16px">Filter & Search</div>
+      <div class="fg">
+        <div class="field"><label>From</label><input class="inp" type="date" id="fFrom" onchange="loadTxTable()" /></div>
+        <div class="field"><label>To</label><input class="inp" type="date" id="fTo" onchange="loadTxTable()" /></div>
+        <div class="field full">
+          <label>Category</label>
+          <select class="inp" id="fCat" onchange="loadTxTable()">
+            <option value="">All Categories</option>
+            <option>🍔 Food & Dining</option><option>🚗 Transport</option>
+            <option>🛍️ Shopping</option><option>🎮 Entertainment</option>
+            <option>📱 Subscriptions</option><option>🏠 Rent</option>
+            <option>🎓 University Fee</option><option>💊 Health</option><option>📦 Other</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>Search</label>
+          <input class="inp" type="text" id="fSearch" placeholder="Search description..." oninput="loadTxTable()" />
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:12px 16px;background:var(--card2);border-radius:12px;display:flex;justify-content:space-between;font-size:.82rem;border:1px solid var(--border)">
+        <span style="color:var(--text3);font-family:'Fira Code',monospace">Filtered Total</span>
+        <span id="filteredTotal" style="color:var(--rose);font-family:'Fira Code',monospace;font-weight:600">₨0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-title">All Transactions</div>
+      <span id="txCount" style="font-size:.72rem;color:var(--text3);font-family:'Fira Code',monospace">0 records</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Method</th><th>Amount</th><th></th></tr></thead>
+        <tbody id="txTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DAILY RECORDS ═══════════════════════════════ -->
+<div class="page" id="page-records">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Daily Records</div>
+      <div class="page-sub">Day-by-day spending history</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:14px">Select Date</div>
+      <input class="inp" type="date" id="rDate" style="margin-bottom:12px;width:100%" onchange="loadDayView()" />
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="rSetDate(0)">Today</button>
+        <button class="btn btn-ghost btn-sm" onclick="rSetDate(-1)">Yesterday</button>
+        <button class="btn btn-ghost btn-sm" onclick="rSetDate(-7)">Week ago</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:12px">Day Summary</div>
+      <div id="daySummary" style="color:var(--text3);font-size:.85rem;font-style:italic;font-family:'Fraunces',serif">Select a date above</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <div class="sec-head">
+      <div class="sec-title" id="dayTitle">Transactions</div>
+      <span style="font-family:'Fira Code',monospace;font-size:.8rem;color:var(--rose)" id="dayTotal">₨0</span>
+    </div>
+    <div id="dayTxList"><div class="empty"><div class="ei">📅</div><p>Select a date</p></div></div>
+  </div>
+
+  <div class="sec-div">30-Day Spending Heatmap</div>
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-title">Last 30 Days</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.68rem;color:var(--text3);font-family:'Fira Code',monospace">
+        Less
+        <div style="width:10px;height:10px;border-radius:2px;background:var(--border)"></div>
+        <div style="width:10px;height:10px;border-radius:2px;background:rgba(240,180,41,.3)"></div>
+        <div style="width:10px;height:10px;border-radius:2px;background:var(--gold)"></div>
+        <div style="width:10px;height:10px;border-radius:2px;background:var(--rose)"></div>
+        More
+      </div>
+    </div>
+    <div class="heatmap" id="heatmap"></div>
+  </div>
+</div>
+
+<!-- ══ MONTHLY VIEW ════════════════════════════════ -->
+<div class="page" id="page-monthly">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Monthly View</div>
+      <div class="page-sub">Full month analysis and comparison</div>
+    </div>
+  </div>
+
+  <div class="month-nav">
+    <button class="btn btn-ghost btn-sm" onclick="chMonth(-1)">◀ Prev</button>
+    <div class="month-label" id="monthLabel">—</div>
+    <button class="btn btn-ghost btn-sm" onclick="chMonth(1)">Next ▶</button>
+  </div>
+
+  <div class="g4" id="monthStats"></div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:18px">Top Categories</div>
+      <div id="monthCats"><div class="empty"><div class="ei">📊</div><p>No data</p></div></div>
+    </div>
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:14px">Transactions</div>
+      <div id="monthTxList" style="max-height:320px;overflow-y:auto"><div class="empty"><div class="ei">📭</div><p>No transactions</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BUDGETS ══════════════════════════════════════ -->
+<div class="page" id="page-budgets">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Budget Manager</div>
+      <div class="page-sub">Set spending limits per category</div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:16px">Edit Limits</div>
+      <div id="budgetForm"></div>
+      <button class="btn btn-gold btn-full" style="margin-top:16px" onclick="saveBudgets()">💾 Save Budgets</button>
+    </div>
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:16px">This Month's Usage</div>
+      <div id="budgetUsage"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SAVINGS ══════════════════════════════════════ -->
+<div class="page" id="page-savings">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Savings Goals</div>
+      <div class="page-sub">Track your saving milestones</div>
+    </div>
+    <button class="btn btn-gold btn-sm" onclick="openGoalModal()">+ New Goal</button>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:14px">🛡 Emergency Fund</div>
+      <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px">
+        <span>Saved: <span id="emgVal" style="color:var(--gold);font-weight:700;font-family:'Fraunces',serif">₨0</span></span>
+        <span style="color:var(--text3)">Goal: <span id="emgGoalVal">₨500,000</span></span>
+      </div>
+      <div class="gbar"><div class="gfill" id="emgFill" style="width:0%"></div></div>
+      <div style="font-size:.72rem;color:var(--text3);font-family:'Fira Code',monospace;margin-bottom:16px" id="emgEst">—</div>
+      <div class="field" style="margin-bottom:10px">
+        <label>Add Amount (PKR)</label>
+        <input class="inp" type="number" id="emgAdd" placeholder="e.g. 37000" />
+      </div>
+      <button class="btn btn-gold btn-full" onclick="addEmg()">+ Add to Fund</button>
+    </div>
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:14px">Monthly Savings Log</div>
+      <div id="savingsLog" style="max-height:280px;overflow-y:auto">
+        <div class="empty"><div class="ei">📈</div><p>No savings logged yet</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-div">Custom Goals</div>
+  <div id="goalsList"></div>
+</div>
+
+<!-- ══ EMAIL ════════════════════════════════════════ -->
+<div class="page" id="page-email">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Email Reports</div>
+      <div class="page-sub">Daily spending summaries to your inbox</div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:18px">Settings</div>
+      <div class="fg" style="grid-template-columns:1fr;gap:14px">
+        <div class="field">
+          <label>Your Email Address</label>
+          <input class="inp" type="email" id="em_email" placeholder="you@gmail.com" />
+        </div>
+        <div class="field">
+          <label>Frequency</label>
+          <select class="inp" id="em_freq">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly (Sunday)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>SendGrid API Key (for sending)</label>
+          <input class="inp" type="password" id="em_sg" placeholder="SG.xxxx..." />
+        </div>
+        <button class="btn btn-gold btn-full" onclick="saveEmailCfg()">💾 Save</button>
+        <button class="btn btn-outline btn-full" onclick="sendReport()">📧 Send Test Report Now</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:14px">Email Preview</div>
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:18px;font-size:.82rem;line-height:1.8;color:var(--text2)">
+        <div style="font-family:'Fraunces',serif;font-weight:700;font-size:1rem;color:var(--text);margin-bottom:10px">📊 DataminoBot Daily Report</div>
+        <div>Hey! 👋 Here's your daily financial snapshot:</div><br>
+        <div>• Spent this month: <span style="color:var(--rose)">[AMOUNT]</span></div>
+        <div>• Remaining budget: <span style="color:var(--teal)">[REMAINING]</span></div>
+        <div>• Daily budget left: <span style="color:var(--gold)">[DAILY]</span></div>
+        <div>• Days left in month: <span style="color:var(--violet)">[DAYS]</span></div><br>
+        <div style="font-style:italic;color:var(--text3);font-family:'Fraunces',serif">Reply with today's expenses and I'll log them!</div>
+      </div>
+      <div class="sec-div" style="margin-top:16px">Email Log</div>
+      <div id="emailLog" style="font-size:.75rem;color:var(--text3);font-family:'Fira Code',monospace;max-height:100px;overflow-y:auto">No emails sent yet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MEMORY ════════════════════════════════════════ -->
+<div class="page" id="page-memory">
+  <div class="page-header">
+    <div>
+      <div class="page-title">AI Memory</div>
+      <div class="page-sub">DataminoBot's persistent memory stored in Supabase</div>
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="clearMemory()">🗑 Clear All</button>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="sec-head"><div class="sec-title">Conversation History</div></div>
+      <div id="memList" style="max-height:500px;overflow-y:auto"></div>
+    </div>
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:14px">Add Memory Note</div>
+      <div class="field" style="margin-bottom:12px">
+        <label>Tell DataminoBot something to remember</label>
+        <textarea class="inp" id="memNote" placeholder="e.g. I have a wedding in December so I need to save extra. I want a MacBook by June." style="height:130px"></textarea>
+      </div>
+      <button class="btn btn-gold btn-full" onclick="addNote()">🧠 Save to Memory</button>
+      <div style="margin-top:20px;padding:14px;background:var(--card2);border-radius:12px;border:1px solid var(--border)">
+        <div style="font-size:.65rem;font-family:'Fira Code',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Memory Stats</div>
+        <div id="memStats" style="font-size:.82rem;color:var(--text2)">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN ══════════════════════════════════════════ -->
+<div class="page" id="page-admin">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Admin Panel</div>
+      <div class="page-sub">Full control · API keys · Settings</div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <!-- Financial -->
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:18px">💰 Financial Settings</div>
+      <div class="fg" style="grid-template-columns:1fr;gap:14px">
+        <div class="field">
+          <label>Monthly Salary (PKR)</label>
+          <input class="inp" type="number" id="a_salary" placeholder="185000" />
+        </div>
+        <div class="field">
+          <label>Monthly Savings Target (PKR)</label>
+          <input class="inp" type="number" id="a_savings" placeholder="37000" />
+        </div>
+        <div class="field">
+          <label>Emergency Fund Goal (PKR)</label>
+          <input class="inp" type="number" id="a_emgGoal" placeholder="500000" />
+        </div>
+        <div class="field">
+          <label>Currency Symbol</label>
+          <select class="inp" id="a_currency">
+            <option value="₨">₨ — Pakistani Rupee</option>
+            <option value="$">$ — US Dollar</option>
+            <option value="€">€ — Euro</option>
+          </select>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="saveFinancial()">💾 Save Financial Settings</button>
+      </div>
+    </div>
+
+    <!-- API Keys -->
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:6px">🔑 API Keys</div>
+      <div style="font-size:.75rem;color:var(--text3);font-style:italic;font-family:'Fraunces',serif;margin-bottom:16px">Stored in your browser only. Never transmitted.</div>
+      <div class="fg" style="grid-template-columns:1fr;gap:14px">
+        <div class="field">
+          <label>OpenAI API Key</label>
+          <input class="inp" type="password" id="a_oai" placeholder="sk-proj-..." />
+          <div style="font-size:.68rem;color:var(--text3);margin-top:4px">Get from: platform.openai.com/api-keys</div>
+        </div>
+        <div class="field">
+          <label>AI Model</label>
+          <select class="inp" id="a_model">
+            <option value="gpt-5-nano-2025-08-07">gpt-5-nano (fastest, cheapest)</option>
+            <option value="gpt-4o-mini">gpt-4o-mini (balanced)</option>
+            <option value="gpt-4o">gpt-4o (most capable)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Supabase Project URL</label>
+          <input class="inp" type="text" id="a_sburl" placeholder="https://xxxx.supabase.co" />
+        </div>
+        <div class="field">
+          <label>Supabase Anon Key</label>
+          <input class="inp" type="password" id="a_sbanon" placeholder="eyJhbGci..." />
+        </div>
+        <div class="field">
+          <label>SendGrid Key (for email reports)</label>
+          <input class="inp" type="password" id="a_sg" placeholder="SG.xxxx..." />
+        </div>
+        <button class="btn btn-gold btn-full" onclick="saveAPIKeys()">💾 Save API Keys</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Management -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="sec-title" style="margin-bottom:16px">🗄️ Data Management</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <button class="btn btn-outline" onclick="exportJSON()">📥 Export JSON</button>
+      <button class="btn btn-outline" onclick="exportCSV()">📊 Export CSV</button>
+      <button class="btn btn-outline" onclick="refreshAll()">🔄 Refresh All</button>
+      <button class="btn btn-danger" onclick="confirmClear()">⚠️ Clear All Expenses</button>
+    </div>
+  </div>
+
+  <!-- System Info -->
+  <div class="card">
+    <div class="sec-title" style="margin-bottom:14px">ℹ️ System Info</div>
+    <div class="g4">
+      <div class="card2"><div style="font-size:.62rem;font-family:'Fira Code',monospace;color:var(--text3);margin-bottom:6px">AI MODEL</div><div style="font-weight:600;font-size:.85rem" id="sys_model">—</div></div>
+      <div class="card2"><div style="font-size:.62rem;font-family:'Fira Code',monospace;color:var(--text3);margin-bottom:6px">DATABASE</div><div style="font-weight:600;font-size:.85rem" id="sys_db">Local Storage</div></div>
+      <div class="card2"><div style="font-size:.62rem;font-family:'Fira Code',monospace;color:var(--text3);margin-bottom:6px">TRANSACTIONS</div><div style="font-weight:600;font-size:.85rem;color:var(--gold)" id="sys_tx">—</div></div>
+      <div class="card2"><div style="font-size:.62rem;font-family:'Fira Code',monospace;color:var(--text3);margin-bottom:6px">MEMORY ENTRIES</div><div style="font-weight:600;font-size:.85rem;color:var(--violet)" id="sys_mem">—</div></div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="addModal">
+  <div class="modal">
+    <div class="modal-title">Quick Log Expense</div>
+    <div class="fg">
+      <div class="field"><label>Amount (PKR)</label><input class="inp" type="number" id="mAmt" placeholder="3500" /></div>
+      <div class="field"><label>Category</label><select class="inp" id="mCat">
+        <option>🍔 Food & Dining</option><option>🚗 Transport</option><option>🛍️ Shopping</option>
+        <option>🎮 Entertainment</option><option>📱 Subscriptions</option><option>🏠 Rent</option>
+        <option>🎓 University Fee</option><option>💊 Health</option><option>📦 Other</option>
+      </select></div>
+      <div class="field full"><label>Description</label><input class="inp" type="text" id="mDesc" placeholder="What did you spend on?" /></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-gold" style="flex:1" onclick="addFromModal()">➕ Log + AI Reaction</button>
+      <button class="btn btn-ghost" onclick="closeModal('addModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="goalModal">
+  <div class="modal">
+    <div class="modal-title">New Savings Goal</div>
+    <div class="fg" style="grid-template-columns:1fr;gap:14px">
+      <div class="field"><label>Goal Name</label><input class="inp" type="text" id="gName" placeholder="MacBook Pro, Dubai Trip..." /></div>
+      <div class="field"><label>Target Amount (PKR)</label><input class="inp" type="number" id="gTarget" placeholder="200000" /></div>
+      <div class="field"><label>Monthly Contribution (PKR)</label><input class="inp" type="number" id="gMonthly" placeholder="15000" /></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-gold" style="flex:1" onclick="saveGoal()">💾 Create Goal</button>
+      <button class="btn btn-ghost" onclick="closeModal('goalModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"><span id="toastMsg"></span></div>
+
+<script>
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let S = {
+  salary: 185000, savings: 37000,
+  emgGoal: 500000, emgSaved: 0,
+  currency: '₨', emailAddr: '',
+  emailFreq: 'daily'
+};
+let BUDGETS = {
+  '🍔 Food & Dining':20000,'🚗 Transport':10000,'🛍️ Shopping':10000,
+  '🎮 Entertainment':8000,'📱 Subscriptions':3000,'🏠 Rent':30000,
+  '🎓 University Fee':15000,'💊 Health':5000,'📦 Other':7000
+};
+let expenses = [], memory = [], goals = [], savingsLog = [];
+let db = null;
+let curMonth = new Date().getMonth(), curYear = new Date().getFullYear();
+const CAT_COLORS = {
+  '🍔 Food & Dining':'var(--rose)','🚗 Transport':'var(--teal)',
+  '🛍️ Shopping':'var(--gold)','🎮 Entertainment':'var(--violet)',
+  '📱 Subscriptions':'var(--blue,#60a5fa)','🏠 Rent':'#fb923c',
+  '🎓 University Fee':'var(--green)','💊 Health':'#f472b6','📦 Other':'var(--text3)'
+};
+
+// ── HELPERS ────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmt = n => S.currency + Math.abs(Number(n)).toLocaleString();
+const today = () => new Date().toISOString().split('T')[0];
+const curYM = () => `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+
+// ── SETUP ──────────────────────────────────────
+function completeSetup() {
+  const oai = $('s_oai').value.trim();
+  const model = $('s_model').value;
+  const sburl = $('s_sburl').value.trim();
+  const sbanon = $('s_sbanon').value.trim();
+  const salary = parseFloat($('s_salary').value) || 185000;
+  const savings = parseFloat($('s_savings').value) || 37000;
+
+  if (!oai) { showToast('❌ OpenAI API key is required', 't-err'); return; }
+
+  localStorage.setItem('dm_oai', oai);
+  localStorage.setItem('dm_model', model);
+  if (sburl) localStorage.setItem('dm_sburl', sburl);
+  if (sbanon) localStorage.setItem('dm_sbanon', sbanon);
+
+  S.salary = salary; S.savings = savings;
+  localStorage.setItem('dm_S', JSON.stringify(S));
+  localStorage.setItem('dm_setup', '1');
+
+  $('setupScreen').style.display = 'none';
+  launchApp();
+}
+
+function getKey(k) { return localStorage.getItem(k) || ''; }
+
+// ── LAUNCH APP ─────────────────────────────────
+async function launchApp() {
+  $('appShell').style.display = 'block';
+  $('loadScreen').style.display = 'flex';
+
+  // Load stored settings
+  const stored = getKey('dm_S');
+  if (stored) try { Object.assign(S, JSON.parse(stored)); } catch(e){}
+  const storedB = getKey('dm_budgets');
+  if (storedB) try { BUDGETS = JSON.parse(storedB); } catch(e){}
+  const storedG = getKey('dm_goals');
+  if (storedG) try { goals = JSON.parse(storedG); } catch(e){}
+  const storedSL = getKey('dm_savlog');
+  if (storedSL) try { savingsLog = JSON.parse(storedSL); } catch(e){}
+  S.emgSaved = parseInt(getKey('dm_emg')) || 0;
+
+  // Try Supabase
+  const sburl = getKey('dm_sburl');
+  const sbanon = getKey('dm_sbanon');
+  if (sburl && sbanon && window.supabase) {
+    try {
+      db = supabase.createClient(sburl, sbanon);
+      const { data, error } = await db.from('dm_transactions').select('*').order('created_at',{ascending:false});
+      if (!error && data) { expenses = data; $('sys_db').textContent = 'Supabase ✓'; }
+      else throw error;
+      const { data: mem } = await db.from('dm_memory').select('*').order('created_at',{ascending:true});
+      if (mem) memory = mem;
+    } catch(e) {
+      db = null;
+      loadLocalExpenses();
+    }
+  } else {
+    loadLocalExpenses();
+  }
+
+  $('loadScreen').style.display = 'none';
+  prefillAdmin();
+  initDateFields();
+  goPage('dashboard');
+  setTimeout(dashGreeting, 600);
+}
+
+function loadLocalExpenses() {
+  const le = getKey('dm_expenses');
+  if (le) try { expenses = JSON.parse(le); } catch(e){}
+  const lm = getKey('dm_memory');
+  if (lm) try { memory = JSON.parse(lm); } catch(e){}
+}
+
+function saveLocal() {
+  if (!db) localStorage.setItem('dm_expenses', JSON.stringify(expenses));
+  localStorage.setItem('dm_memory', JSON.stringify(memory.slice(-100)));
+}
+
+function initDateFields() {
+  const t = today();
+  if ($('eDate')) $('eDate').value = t;
+  if ($('rDate')) $('rDate').value = t;
+}
+
+// ── NAVIGATION ─────────────────────────────────
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = $('page-'+id);
+  if (pg) pg.classList.add('active');
+  const ni = document.querySelector(`[onclick="goPage('${id}')"]`);
+  if (ni) ni.classList.add('active');
+  document.querySelector('.sidebar')?.classList.remove('open');
+  // Page-specific refresh
+  if (id==='dashboard') refreshDash();
+  if (id==='expenses') loadTxTable();
+  if (id==='records') { loadDayView(); buildHeatmap(); }
+  if (id==='monthly') renderMonthly();
+  if (id==='budgets') renderBudgets();
+  if (id==='savings') renderSavings();
+  if (id==='memory') renderMemory();
+  if (id==='email') loadEmailCfg();
+  if (id==='admin') { prefillAdmin(); updateSysInfo(); }
+}
+
+function toggleSidebar() { $('sidebar').classList.toggle('open'); }
+
+// ── THEME ──────────────────────────────────────
+function toggleTheme() {
+  const h = document.documentElement;
+  const isDark = h.getAttribute('data-theme') === 'dark';
+  h.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  localStorage.setItem('dm_theme', isDark ? 'light' : 'dark');
+}
+
+// ── DASHBOARD ──────────────────────────────────
+function refreshDash() {
+  const ym = curYM();
+  const monthExp = expenses.filter(e => (e.date||'').startsWith(ym));
+  const todayExp = expenses.filter(e => e.date === today());
+  const totalSpent = monthExp.reduce((s,e)=>s+Number(e.amount),0);
+  const spendable = S.salary - S.savings;
+  const remaining = spendable - totalSpent;
+  const pct = Math.min((totalSpent/spendable)*100, 100);
+
+  $('s_budget').textContent = fmt(S.salary);
+  $('s_spent').textContent = fmt(totalSpent);
+  $('s_spent_pct').textContent = pct.toFixed(1)+'% of spendable budget';
+  $('s_spent_bar').style.width = pct+'%';
+  $('s_spent_bar').style.background = pct>85?'var(--rose)':pct>65?'var(--gold)':'var(--rose)';
+
+  $('s_saved').textContent = fmt(S.savings);
+  $('s_saved_sub').textContent = 'Target: '+fmt(S.savings);
+  $('s_saved_bar').style.width = Math.min((S.savings/S.salary)*100,100)+'%';
+
+  $('s_remain').textContent = fmt(Math.abs(remaining));
+  $('s_remain').style.color = remaining<0?'var(--rose)':remaining<20000?'var(--gold)':'var(--teal)';
+  $('s_remain_sub').textContent = remaining<0?'⚠️ Over budget by '+fmt(Math.abs(remaining)):'Available to spend';
+  $('s_remain_bar').style.width = Math.max((remaining/spendable)*100,0)+'%';
+  $('s_remain_bar').style.background = remaining<0?'var(--rose)':remaining<20000?'var(--gold)':'var(--teal)';
+
+  $('sbSalary').textContent = fmt(S.salary);
+  $('dashDate').textContent = new Date().toLocaleDateString('en-PK',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  const model = getKey('dm_model') || 'gpt-5-nano';
+  if ($('modelBadge')) $('modelBadge').textContent = model + ' · Active';
+  if ($('modelBadge2')) $('modelBadge2').textContent = model + ' · Active';
+
+  // Today list
+  const todayTotal = todayExp.reduce((s,e)=>s+Number(e.amount),0);
+  $('todayTotalBadge').textContent = fmt(todayTotal);
+  if (todayExp.length === 0) {
+    $('todayList').innerHTML = '<div class="empty"><div class="ei">📭</div><p>No expenses logged today</p></div>';
+  } else {
+    $('todayList').innerHTML = todayExp.map(e=>`
+      <div class="tx-row">
+        <div class="tx-icon" style="background:${CAT_COLORS[e.category]||'var(--border)'}22">${e.category?.split(' ')[0]||'📦'}</div>
+        <div class="tx-info">
+          <div class="tx-name">${e.description||e.category}</div>
+          <div class="tx-meta">${e.category}</div>
+        </div>
+        <div class="tx-amt" style="color:var(--rose)">${fmt(e.amount)}</div>
+      </div>`).join('');
+  }
+
+  // Category breakdown
+  const cats = {};
+  monthExp.forEach(e=>{cats[e.category]=(cats[e.category]||0)+Number(e.amount);});
+  if (Object.keys(cats).length===0) {
+    $('catBreakdown').innerHTML = '<div class="empty"><div class="ei">📊</div><p>Log expenses to see breakdown</p></div>';
+  } else {
+    $('catBreakdown').innerHTML = Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([cat,amt])=>{
+      const lim = BUDGETS[cat]||10000;
+      const p = Math.min((amt/lim)*100,100);
+      const c = p>90?'var(--rose)':p>70?'var(--gold)':'var(--teal)';
+      return `<div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:5px">
+          <span style="font-weight:500">${cat}</span>
+          <span style="font-family:'Fira Code',monospace;color:${c}">${fmt(amt)}</span>
+        </div>
+        <div class="pbar"><div class="pfill" style="background:${c};width:${p}%"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  buildWeekChart();
+}
+
+function buildWeekChart() {
+  const days = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));return d;});
+  const amounts = days.map(d=>expenses.filter(e=>e.date===d.toISOString().split('T')[0]).reduce((s,e)=>s+Number(e.amount),0));
+  const max = Math.max(...amounts, 1);
+  $('weekChart').innerHTML = amounts.map((a,i)=>{
+    const h = Math.max((a/max)*90,3);
+    const c = a>10000?'var(--rose)':a>5000?'var(--gold)':'var(--teal)';
+    return `<div class="cbar" style="height:${h}px;background:${c}" data-tip="${fmt(a)}"></div>`;
+  }).join('');
+  $('weekLabels').innerHTML = days.map(d=>`<span>${['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()]}</span>`).join('');
+}
+
+// ── AI ─────────────────────────────────────────
+function buildSys() {
+  const ym = curYM();
+  const me = expenses.filter(e=>(e.date||'').startsWith(ym));
+  const spent = me.reduce((s,e)=>s+Number(e.amount),0);
+  const spendable = S.salary - S.savings;
+  const remain = spendable - spent;
+  const cats = {};
+  me.forEach(e=>{cats[e.category]=(cats[e.category]||0)+Number(e.amount);});
+  const now = new Date();
+  const daysLeft = new Date(now.getFullYear(),now.getMonth()+1,0).getDate()-now.getDate();
+  return `You are DataminoBot, an intelligent, proactive AI financial guardian for a Pakistani student/professional.
+
+LIVE FINANCIAL DATA:
+- Salary: ${S.currency}${S.salary.toLocaleString()}/month | Savings target: ${S.currency}${S.savings.toLocaleString()} (non-negotiable)
+- Spendable: ${S.currency}${spendable.toLocaleString()} | Spent this month: ${S.currency}${spent.toLocaleString()}
+- Remaining: ${S.currency}${remain.toLocaleString()} | Days left in month: ${daysLeft}
+- Daily budget left: ${S.currency}${remain>0?Math.floor(remain/Math.max(daysLeft,1)).toLocaleString():0}
+- Emergency fund: ${S.currency}${S.emgSaved.toLocaleString()} / ${S.currency}${S.emgGoal.toLocaleString()}
+- Category spending: ${JSON.stringify(cats)}
+- Limits: ${JSON.stringify(BUDGETS)}
+- Total transactions: ${expenses.length}
+
+STYLE: Direct, warm, like a smart older sibling. Use amounts in responses. 2-4 sentences for simple queries. Warn proactively. Today: ${now.toDateString()}`;
+}
+
+async function callAI(msg, withHistory=true) {
+  const key = getKey('dm_oai');
+  const model = getKey('dm_model') || 'gpt-5-nano-2025-08-07';
+  if (!key) throw new Error('No API key. Please add it in Admin Panel.');
+
+  const msgs = [{role:'system',content:buildSys()}];
+  if (withHistory && memory.length > 0) {
+    memory.slice(-16).forEach(m=>msgs.push({role:m.role, content:m.content}));
+  }
+  msgs.push({role:'user',content:msg});
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model, max_tokens:500, messages:msgs})
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.choices?.[0]?.message?.content || 'No response.';
+}
+
+function fmtAI(t) {
+  return t.replace(/(?:PKR|₨)\s*([\d,]+)/g,'<span class="hl">'+S.currency+'$1</span>')
+          .replace(/\b(overspent|over budget|exceeded|danger|warning)\b/gi,'<span class="danger">$1</span>')
+          .replace(/\b(great|excellent|on track|well done|saved|good job)\b/gi,'<span class="ok">$1</span>');
+}
+
+async function dashGreeting() {
+  const el = $('dashAIMsg');
+  el.innerHTML = '<div class="thinking"><span></span><span></span><span></span></div>';
+  try {
+    const ym = curYM();
+    const spent = expenses.filter(e=>(e.date||'').startsWith(ym)).reduce((s,e)=>s+Number(e.amount),0);
+    const prompt = expenses.length===0
+      ? `Greet the user warmly. They earn ${S.currency}${S.salary.toLocaleString()}/month with ${S.currency}${S.savings.toLocaleString()} locked savings. Spendable: ${S.currency}${(S.salary-S.savings).toLocaleString()}. Tell them to start logging. 2 sentences, energetic.`
+      : `Give a short dashboard greeting. They've spent ${S.currency}${spent.toLocaleString()} this month. Remaining: ${S.currency}${(S.salary-S.savings-spent).toLocaleString()}. One key insight. 2 sentences.`;
+    const reply = await callAI(prompt, false);
+    el.innerHTML = fmtAI(reply);
+  } catch(e) {
+    el.textContent = '👋 Welcome to DataminoBot! Start logging your expenses and I\'ll guide your financial journey.';
+  }
+}
+
+async function qChat(msg) { goPage('ai'); $('chatInp').value = msg; await sendChat(); }
+async function aiQ(msg) { $('chatInp').value = msg; await sendChat(); }
+
+async function sendChat() {
+  const inp = $('chatInp');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+
+  const log = $('chatLog');
+  if (log.querySelector('.empty')) log.innerHTML = '';
+
+  log.innerHTML += `<div class="msg-user">${msg}</div>`;
+
+  const tid = 'th'+Date.now();
+  log.innerHTML += `<div class="msg-ai" id="${tid}"><div class="msg-ai-avatar">🤖</div><div class="msg-ai-bubble"><div class="thinking"><span></span><span></span><span></span></div></div></div>`;
+  log.scrollTop = log.scrollHeight;
+
+  $('chatBtn').disabled = true;
+  try {
+    await saveMem('user', msg);
+    const reply = await callAI(msg, true);
+    await saveMem('assistant', reply);
+    $(tid).outerHTML = `<div class="msg-ai"><div class="msg-ai-avatar">🤖</div><div class="msg-ai-bubble">${fmtAI(reply)}</div></div>`;
+  } catch(e) {
+    $(tid).outerHTML = `<div style="color:var(--rose);font-size:.82rem;padding:8px 0">⚠️ ${e.message}</div>`;
+  }
+  $('chatBtn').disabled = false;
+  log.scrollTop = log.scrollHeight;
+}
+
+async function saveMem(role, content) {
+  const entry = {role, content, created_at: new Date().toISOString()};
+  memory.push(entry);
+  if (db) { try { await db.from('dm_memory').insert([{role,content}]); } catch(e){} }
+  saveLocal();
+}
+
+async function clearMemory() {
+  if (!confirm('Clear all AI memory?')) return;
+  memory = [];
+  saveLocal();
+  if (db) { try { await db.from('dm_memory').delete().neq('id',0); } catch(e){} }
+  const log = $('chatLog');
+  if (log) log.innerHTML = '<div class="empty"><div class="ei">🧠</div><p>Memory cleared</p></div>';
+  renderMemory();
+  showToast('🗑 Memory cleared', 't-ok');
+}
+
+// ── EXPENSES ────────────────────────────────────
+async function addExpense() {
+  const amt = parseFloat($('eAmt').value);
+  const cat = $('eCat').value;
+  const desc = $('eDesc').value.trim()||cat;
+  const date = $('eDate').value||today();
+  const method = $('eMethod').value;
+  const notes = $('eNotes').value.trim();
+  if (!amt||amt<=0) { showToast('❌ Enter a valid amount','t-err'); return; }
+
+  const tx = {amount:amt,category:cat,description:desc,date,method,notes,created_at:new Date().toISOString()};
+  if (db) {
+    const {data,error} = await db.from('dm_transactions').insert([tx]).select();
+    if (!error&&data) expenses.unshift(data[0]); else { tx.id=Date.now(); expenses.unshift(tx); }
+  } else { tx.id=Date.now(); expenses.unshift(tx); saveLocal(); }
+
+  $('eAmt').value=''; $('eDesc').value=''; $('eNotes').value='';
+  refreshDash(); loadTxTable();
+  showToast(`✅ Logged ${fmt(amt)} — ${cat}`,'t-ok');
+  await expenseAI(amt,cat,desc,date);
+}
+
+async function addFromModal() {
+  const amt = parseFloat($('mAmt').value);
+  const cat = $('mCat').value;
+  const desc = $('mDesc').value.trim()||cat;
+  if (!amt||amt<=0) { showToast('❌ Enter valid amount','t-err'); return; }
+  const tx = {amount:amt,category:cat,description:desc,date:today(),method:'Cash',notes:'',created_at:new Date().toISOString()};
+  if (db) {
+    const {data,error} = await db.from('dm_transactions').insert([tx]).select();
+    if (!error&&data) expenses.unshift(data[0]); else { tx.id=Date.now(); expenses.unshift(tx); }
+  } else { tx.id=Date.now(); expenses.unshift(tx); saveLocal(); }
+  closeModal('addModal');
+  refreshDash();
+  showToast(`✅ Logged ${fmt(amt)}`,'t-ok');
+  await expenseAI(amt,cat,desc,today());
+}
+
+async function expenseAI(amt, cat, desc, date) {
+  const ym = date.substring(0,7);
+  const me = expenses.filter(e=>(e.date||'').startsWith(ym));
+  const totalSpent = me.reduce((s,e)=>s+Number(e.amount),0);
+  const remain = (S.salary-S.savings)-totalSpent;
+  const catSpent = me.filter(e=>e.category===cat).reduce((s,e)=>s+Number(e.amount),0);
+  const prompt = `Just logged: ${S.currency}${amt} on "${desc}" (${cat}). Category budget: ${S.currency}${BUDGETS[cat]||10000}, spent so far: ${S.currency}${catSpent}. Month remaining: ${S.currency}${remain}. React in 2 sentences max. Be direct. One tip.`;
+  const el = $('dashAIMsg');
+  if (el) {
+    el.innerHTML = '<div class="thinking"><span></span><span></span><span></span></div>';
+    goPage('dashboard');
+    try { el.innerHTML = fmtAI(await callAI(prompt,false)); } catch(e) { el.textContent = `Logged ${fmt(amt)} on ${cat}.`; }
+  }
+}
+
+async function deleteExpense(id) {
+  if (!confirm('Delete this transaction?')) return;
+  if (db) { try { await db.from('dm_transactions').delete().eq('id',id); } catch(e){} }
+  expenses = expenses.filter(e=>e.id!==id);
+  saveLocal(); loadTxTable(); refreshDash();
+  showToast('🗑 Deleted','t-ok');
+}
+
+function loadTxTable() {
+  const from = $('fFrom')?.value, to = $('fTo')?.value;
+  const cat = $('fCat')?.value, search = $('fSearch')?.value?.toLowerCase();
+  let f = [...expenses];
+  if (from) f = f.filter(e=>e.date>=from);
+  if (to) f = f.filter(e=>e.date<=to);
+  if (cat) f = f.filter(e=>e.category===cat);
+  if (search) f = f.filter(e=>(e.description||'').toLowerCase().includes(search)||(e.category||'').toLowerCase().includes(search));
+  const total = f.reduce((s,e)=>s+Number(e.amount),0);
+  if ($('filteredTotal')) $('filteredTotal').textContent = fmt(total);
+  if ($('txCount')) $('txCount').textContent = f.length+' records';
+  const tb = $('txTbody');
+  if (!tb) return;
+  if (f.length===0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3);font-style:italic;font-family:\'Fraunces\',serif">No transactions found</td></tr>'; return; }
+  tb.innerHTML = f.map(e=>`<tr>
+    <td style="font-family:'Fira Code',monospace;font-size:.75rem;color:var(--text3)">${e.date||'—'}</td>
+    <td style="font-weight:500;color:var(--text)">${e.description||'—'}</td>
+    <td><span class="badge b-teal">${e.category||'—'}</span></td>
+    <td style="font-size:.78rem;color:var(--text3)">${e.method||'—'}</td>
+    <td style="font-family:'Fira Code',monospace;color:var(--rose);font-weight:600">${fmt(e.amount)}</td>
+    <td><button class="del-btn" onclick="deleteExpense(${JSON.stringify(e.id)})">🗑</button></td>
+  </tr>`).join('');
+}
+
+// ── DAILY RECORDS ───────────────────────────────
+function loadDayView() {
+  const date = $('rDate')?.value;
+  if (!date) return;
+  const de = expenses.filter(e=>e.date===date);
+  const total = de.reduce((s,e)=>s+Number(e.amount),0);
+  if ($('dayTitle')) $('dayTitle').textContent = 'Transactions · '+new Date(date+'T12:00').toLocaleDateString('en-PK',{weekday:'long',month:'short',day:'numeric'});
+  if ($('dayTotal')) $('dayTotal').textContent = fmt(total);
+
+  const list = $('dayTxList');
+  if (!list) return;
+  if (de.length===0) { list.innerHTML = '<div class="empty"><div class="ei">📅</div><p>No expenses on this day</p></div>'; }
+  else { list.innerHTML = de.map(e=>`<div class="tx-row">
+    <div class="tx-icon" style="background:${CAT_COLORS[e.category]||'var(--border)'}22">${e.category?.split(' ')[0]||'📦'}</div>
+    <div class="tx-info"><div class="tx-name">${e.description||e.category}</div><div class="tx-meta">${e.category} · ${e.method||'Cash'}</div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="tx-amt" style="color:var(--rose)">${fmt(e.amount)}</span>
+      <button class="del-btn" onclick="deleteExpense(${JSON.stringify(e.id)})">🗑</button>
+    </div></div>`).join(''); }
+
+  const sum = $('daySummary');
+  if (sum) {
+    const cats = {};
+    de.forEach(e=>{cats[e.category]=(cats[e.category]||0)+Number(e.amount);});
+    const top = Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+    sum.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="card2"><div style="font-size:.62rem;font-family:'Fira Code',monospace;color:var(--text3);margin-bottom:6px">TOTAL SPENT</div><div style="font-family:'Fraunces',serif;font-size:1.3rem;font-weight:700;color:var(--rose)">${fmt(total)}</div></div>
+      <div class="card2"><div style="font-size:.62rem;font-family:'Fira Code',monospace;color:var(--text3);margin-bottom:6px">TRANSACTIONS</div><div style="font-family:'Fraunces',serif;font-size:1.3rem;font-weight:700">${de.length}</div></div>
+      <div class="card2" style="grid-column:1/-1"><div style="font-size:.62rem;font-family:'Fira Code',monospace;color:var(--text3);margin-bottom:6px">TOP CATEGORY</div><div style="font-weight:600;font-size:.9rem">${top?top[0]+' · '+fmt(top[1]):'—'}</div></div>
+    </div>`;
+  }
+}
+
+function rSetDate(offset) {
+  const d = new Date(); d.setDate(d.getDate()+offset);
+  $('rDate').value = d.toISOString().split('T')[0]; loadDayView();
+}
+
+function buildHeatmap() {
+  const hm = $('heatmap'); if (!hm) return;
+  hm.innerHTML = Array.from({length:30},(_,i)=>{
+    const d = new Date(); d.setDate(d.getDate()-(29-i));
+    const ds = d.toISOString().split('T')[0];
+    const amt = expenses.filter(e=>e.date===ds).reduce((s,e)=>s+Number(e.amount),0);
+    const t = amt/15000;
+    const bg = t===0?'var(--border)':t<.3?'rgba(240,180,41,.2)':t<.6?'rgba(240,180,41,.5)':t<.9?'var(--gold)':'var(--rose)';
+    return `<div class="hc" style="background:${bg}" title="${ds}: ${fmt(amt)}" onclick="$('rDate').value='${ds}';loadDayView()"></div>`;
+  }).join('');
+}
+
+// ── MONTHLY ─────────────────────────────────────
+function chMonth(d) {
+  curMonth+=d;
+  if(curMonth>11){curMonth=0;curYear++;}
+  if(curMonth<0){curMonth=11;curYear--;}
+  renderMonthly();
+}
+
+function renderMonthly() {
+  const ym = `${curYear}-${String(curMonth+1).padStart(2,'0')}`;
+  if ($('monthLabel')) $('monthLabel').textContent = new Date(curYear,curMonth,1).toLocaleString('en-PK',{month:'long',year:'numeric'});
+  const me = expenses.filter(e=>(e.date||'').startsWith(ym));
+  const spent = me.reduce((s,e)=>s+Number(e.amount),0);
+  const spendable = S.salary-S.savings;
+
+  if ($('monthStats')) $('monthStats').innerHTML = [
+    {l:'Total Spent',v:fmt(spent),c:'var(--rose)'},
+    {l:'Spendable',v:fmt(spendable),c:'var(--teal)'},
+    {l:'Remaining',v:fmt(spendable-spent),c:(spendable-spent)<0?'var(--rose)':'var(--gold)'},
+    {l:'Transactions',v:me.length,c:'var(--violet)'}
+  ].map(s=>`<div class="stat-card"><div class="sc-label">${s.l}</div><div class="sc-val" style="color:${s.c}">${s.v}</div></div>`).join('');
+
+  const cats = {};
+  me.forEach(e=>{cats[e.category]=(cats[e.category]||0)+Number(e.amount);});
+  const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  if ($('monthCats')) $('monthCats').innerHTML = sorted.length===0?'<div class="empty"><div class="ei">📊</div><p>No data</p></div>':sorted.map(([cat,amt])=>{
+    const p = Math.min((amt/(BUDGETS[cat]||10000))*100,100);
+    const c = p>90?'var(--rose)':p>70?'var(--gold)':'var(--teal)';
+    return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:.83rem;margin-bottom:6px"><span style="font-weight:500">${cat}</span><span style="font-family:'Fira Code',monospace;color:${c}">${fmt(amt)}</span></div><div class="pbar"><div class="pfill" style="background:${c};width:${p}%"></div></div></div>`;
+  }).join('');
+
+  if ($('monthTxList')) $('monthTxList').innerHTML = me.length===0?'<div class="empty"><div class="ei">📭</div><p>No transactions</p></div>':me.slice(0,40).map(e=>`<div class="tx-row">
+    <div class="tx-info"><div class="tx-name">${e.description||e.category}</div><div class="tx-meta">${e.date} · ${e.category}</div></div>
+    <div class="tx-amt" style="color:var(--rose)">${fmt(e.amount)}</div></div>`).join('');
+}
+
+// ── BUDGETS ─────────────────────────────────────
+function renderBudgets() {
+  if ($('budgetForm')) $('budgetForm').innerHTML = Object.entries(BUDGETS).map(([cat,lim])=>`
+    <div class="field" style="margin-bottom:12px">
+      <label>${cat}</label>
+      <input class="inp bud-inp" type="number" data-cat="${cat}" value="${lim}" />
+    </div>`).join('');
+
+  const ym = curYM();
+  const me = expenses.filter(e=>(e.date||'').startsWith(ym));
+  const spent = {}; me.forEach(e=>{spent[e.category]=(spent[e.category]||0)+Number(e.amount);});
+  if ($('budgetUsage')) $('budgetUsage').innerHTML = Object.entries(BUDGETS).map(([cat,lim])=>{
+    const s = spent[cat]||0, p = Math.min((s/lim)*100,100), over = s>lim;
+    const c = over?'var(--rose)':p>75?'var(--gold)':'var(--teal)';
+    return `<div class="budget-item">
+      <div class="budget-row">
+        <div class="budget-cat"><div style="width:6px;height:6px;border-radius:50%;background:${c};flex-shrink:0"></div>${cat}</div>
+        <div class="budget-amt ${over?'budget-over':''}">${fmt(s)} / ${fmt(lim)}</div>
+      </div>
+      <div class="pbar"><div class="pfill" style="background:${c};width:${p}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function saveBudgets() {
+  document.querySelectorAll('.bud-inp').forEach(inp=>{
+    if(inp.dataset.cat&&parseFloat(inp.value)>0) BUDGETS[inp.dataset.cat]=parseFloat(inp.value);
+  });
+  localStorage.setItem('dm_budgets',JSON.stringify(BUDGETS));
+  showToast('💾 Budgets saved','t-ok'); renderBudgets();
+}
+
+// ── SAVINGS ─────────────────────────────────────
+function renderSavings() {
+  if ($('emgVal')) $('emgVal').textContent = fmt(S.emgSaved);
+  if ($('emgGoalVal')) $('emgGoalVal').textContent = fmt(S.emgGoal);
+  const p = Math.min((S.emgSaved/S.emgGoal)*100,100);
+  if ($('emgFill')) $('emgFill').style.width = p+'%';
+  const m = S.emgSaved>=S.emgGoal?0:((S.emgGoal-S.emgSaved)/S.savings).toFixed(1);
+  if ($('emgEst')) $('emgEst').textContent = S.emgSaved>=S.emgGoal?'🎉 Goal achieved!':'~'+m+' months at '+fmt(S.savings)+'/month';
+
+  if ($('savingsLog')) {
+    if (savingsLog.length===0) $('savingsLog').innerHTML = '<div class="empty"><div class="ei">📈</div><p>No savings logged</p></div>';
+    else $('savingsLog').innerHTML = savingsLog.slice().reverse().map(sl=>`
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:.82rem">
+        <span style="color:var(--text3);font-family:'Fira Code',monospace">${sl.date}</span>
+        <span style="color:var(--gold);font-family:'Fira Code',monospace;font-weight:600">+${fmt(sl.amount)}</span>
+      </div>`).join('');
+  }
+
+  if ($('goalsList')) {
+    if (goals.length===0) $('goalsList').innerHTML = '<div class="empty"><div class="ei">🎯</div><p>No goals yet. Create one!</p></div>';
+    else $('goalsList').innerHTML = goals.map((g,i)=>{
+      const p2 = Math.min((g.saved||0)/g.target*100,100);
+      const m2 = g.saved>=g.target?0:((g.target-(g.saved||0))/(g.monthly||1)).toFixed(1);
+      return `<div class="goal-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-family:'Fraunces',serif;font-size:1rem;font-weight:700">${g.name}</div>
+          <button class="del-btn" onclick="deleteGoal(${i})">🗑</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:4px">
+          <span style="color:var(--text3)">Saved: <span style="color:var(--gold);font-weight:600">${fmt(g.saved||0)}</span></span>
+          <span style="color:var(--text3)">Target: ${fmt(g.target)}</span>
+        </div>
+        <div class="gbar"><div class="gfill" style="width:${p2}%"></div></div>
+        <div style="font-size:.7rem;color:var(--text3);font-family:'Fira Code',monospace;margin-bottom:12px">${g.saved>=g.target?'🎉 Complete!':'~'+m2+' months at '+fmt(g.monthly||0)+'/month'}</div>
+        <div style="display:flex;gap:8px">
+          <input class="inp" type="number" id="ga${i}" placeholder="Add amount..." style="font-size:.8rem;padding:8px 12px" />
+          <button class="btn btn-gold btn-sm" onclick="addToGoal(${i})">+ Add</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function addEmg() {
+  const amt = parseFloat($('emgAdd').value)||0;
+  if (!amt) return;
+  S.emgSaved += amt;
+  localStorage.setItem('dm_emg', S.emgSaved);
+  savingsLog.push({date:today(),amount:amt});
+  localStorage.setItem('dm_savlog',JSON.stringify(savingsLog));
+  $('emgAdd').value = '';
+  renderSavings();
+  showToast('✅ Added '+fmt(amt)+' to emergency fund','t-ok');
+}
+
+function openGoalModal() { $('goalModal').classList.add('open'); }
+function saveGoal() {
+  const name=$('gName').value.trim(),target=parseFloat($('gTarget').value),monthly=parseFloat($('gMonthly').value)||0;
+  if(!name||!target) return;
+  goals.push({name,target,monthly,saved:0});
+  localStorage.setItem('dm_goals',JSON.stringify(goals));
+  closeModal('goalModal'); renderSavings(); showToast('🎯 Goal created','t-ok');
+}
+function addToGoal(i) {
+  const amt=parseFloat($('ga'+i)?.value)||0; if(!amt) return;
+  goals[i].saved=(goals[i].saved||0)+amt;
+  localStorage.setItem('dm_goals',JSON.stringify(goals));
+  renderSavings();
+}
+function deleteGoal(i) { if(!confirm('Delete?'))return; goals.splice(i,1); localStorage.setItem('dm_goals',JSON.stringify(goals)); renderSavings(); }
+
+// ── EMAIL ────────────────────────────────────────
+function loadEmailCfg() {
+  const stored = getKey('dm_emailcfg');
+  if (stored) { try{ const c=JSON.parse(stored); if($('em_email'))$('em_email').value=c.email||''; if($('em_freq'))$('em_freq').value=c.freq||'daily'; }catch(e){} }
+  if (getKey('dm_sg') && $('em_sg')) $('em_sg').placeholder='✅ Key saved';
+}
+function saveEmailCfg() {
+  const email=$('em_email').value.trim(),freq=$('em_freq').value,sg=$('em_sg').value.trim();
+  localStorage.setItem('dm_emailcfg',JSON.stringify({email,freq}));
+  if(sg) localStorage.setItem('dm_sg',sg);
+  showToast('💾 Email settings saved','t-ok');
+}
+
+async function sendReport() {
+  const cfg = JSON.parse(getKey('dm_emailcfg')||'{}');
+  const email = cfg.email; const sg = getKey('dm_sg');
+  if (!email) { showToast('❌ Set email first','t-err'); return; }
+  if (!sg) { showToast('❌ Set SendGrid key first','t-err'); return; }
+  const ym=curYM(); const me=expenses.filter(e=>(e.date||'').startsWith(ym));
+  const spent=me.reduce((s,e)=>s+Number(e.amount),0);
+  const remain=(S.salary-S.savings)-spent;
+  const now=new Date(); const daysLeft=new Date(now.getFullYear(),now.getMonth()+1,0).getDate()-now.getDate();
+  showToast('📧 Sending...','t-info');
+  try {
+    const r = await fetch('https://api.sendgrid.com/v3/mail/send',{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+sg},
+      body:JSON.stringify({
+        personalizations:[{to:[{email}]}],
+        from:{email:'noreply@dataminobot.app',name:'DataminoBot'},
+        subject:`📊 DataminoBot Report · ${now.toLocaleDateString('en-PK')}`,
+        content:[{type:'text/html',value:`<div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#080b12;color:#e8eaf5;padding:40px;border-radius:20px">
+          <div style="font-size:1.4rem;font-weight:700;margin-bottom:4px">DataminoBot <span style="color:#f0b429">Pro</span></div>
+          <div style="color:#4a5578;margin-bottom:28px;font-size:.85rem">${now.toDateString()}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
+            <div style="background:#141d2e;border-radius:12px;padding:16px"><div style="font-size:.65rem;color:#4a5578;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Spent This Month</div><div style="font-size:1.5rem;font-weight:800;color:#fb7185">${S.currency}${spent.toLocaleString()}</div></div>
+            <div style="background:#141d2e;border-radius:12px;padding:16px"><div style="font-size:.65rem;color:#4a5578;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Remaining</div><div style="font-size:1.5rem;font-weight:800;color:${remain<0?'#fb7185':'#2dd4bf'}">${S.currency}${Math.abs(remain).toLocaleString()}</div></div>
+            <div style="background:#141d2e;border-radius:12px;padding:16px"><div style="font-size:.65rem;color:#4a5578;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Days Left</div><div style="font-size:1.5rem;font-weight:800;color:#f0b429">${daysLeft}</div></div>
+            <div style="background:#141d2e;border-radius:12px;padding:16px"><div style="font-size:.65rem;color:#4a5578;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Daily Budget</div><div style="font-size:1.5rem;font-weight:800;color:#a78bfa">${S.currency}${remain>0?Math.floor(remain/Math.max(daysLeft,1)).toLocaleString():0}</div></div>
+          </div>
+          <div style="background:#141d2e;border-radius:12px;padding:18px;font-size:.9rem;line-height:1.7;color:#8892b0">Reply with today's expenses and I'll log them! Or open DataminoBot to track manually.</div>
+          <div style="margin-top:24px;font-size:.72rem;color:#4a5578">— DataminoBot AI Finance System</div>
+        </div>`}]
+      })
+    });
+    if(r.ok||r.status===202){ showToast('✅ Report sent to '+email,'t-ok'); const el=$('emailLog'); if(el)el.innerHTML=`✅ ${now.toLocaleString()} → ${email}\n`+el.innerHTML; }
+    else { const e=await r.json(); showToast('❌ '+(e.errors?.[0]?.message||r.status),'t-err'); }
+  } catch(e) { showToast('❌ '+e.message,'t-err'); }
+}
+
+// ── MEMORY ───────────────────────────────────────
+function renderMemory() {
+  const list = $('memList'); if (!list) return;
+  if (memory.length===0) { list.innerHTML='<div class="empty"><div class="ei">🧠</div><p>No memory yet</p></div>'; return; }
+  list.innerHTML = memory.slice(-40).reverse().map(m=>`
+    <div class="mem-entry ${m.role==='user'?'mem-user':'mem-ai'}">
+      <div class="mem-role" style="color:${m.role==='user'?'var(--gold)':'var(--teal)'}">${m.role==='user'?'👤 You':'🤖 DataminoBot'}</div>
+      ${m.content}
+    </div>`).join('');
+  if ($('memStats')) $('memStats').textContent = memory.length+' memory entries · DB: '+(db?'Supabase':'Local');
+}
+
+async function addNote() {
+  const note=$('memNote').value.trim(); if(!note) return;
+  await saveMem('user','[Note] '+note);
+  await saveMem('assistant','Noted! I\'ll remember: '+note);
+  $('memNote').value=''; renderMemory(); showToast('🧠 Saved to memory','t-ok');
+}
+
+// ── ADMIN ────────────────────────────────────────
+function prefillAdmin() {
+  if($('a_salary'))$('a_salary').value=S.salary;
+  if($('a_savings'))$('a_savings').value=S.savings;
+  if($('a_emgGoal'))$('a_emgGoal').value=S.emgGoal;
+  if($('a_currency'))$('a_currency').value=S.currency;
+  const model=getKey('dm_model'); if($('a_model')&&model)$('a_model').value=model;
+  const sburl=getKey('dm_sburl'); if($('a_sburl')&&sburl)$('a_sburl').value=sburl;
+  if(getKey('dm_oai')&&$('a_oai'))$('a_oai').placeholder='✅ Key saved';
+  if(getKey('dm_sbanon')&&$('a_sbanon'))$('a_sbanon').placeholder='✅ Key saved';
+  if(getKey('dm_sg')&&$('a_sg'))$('a_sg').placeholder='✅ Key saved';
+}
+
+function saveFinancial() {
+  S.salary=parseFloat($('a_salary').value)||S.salary;
+  S.savings=parseFloat($('a_savings').value)||S.savings;
+  S.emgGoal=parseFloat($('a_emgGoal').value)||S.emgGoal;
+  S.currency=$('a_currency').value;
+  localStorage.setItem('dm_S',JSON.stringify(S));
+  $('sbSalary').textContent=fmt(S.salary);
+  refreshDash(); showToast('💾 Financial settings saved','t-ok');
+}
+
+function saveAPIKeys() {
+  const oai=$('a_oai').value.trim(),model=$('a_model').value;
+  const sburl=$('a_sburl').value.trim(),sbanon=$('a_sbanon').value.trim();
+  const sg=$('a_sg').value.trim();
+  if(oai){localStorage.setItem('dm_oai',oai);$('a_oai').value='';$('a_oai').placeholder='✅ Key saved';}
+  if(model)localStorage.setItem('dm_model',model);
+  if(sburl)localStorage.setItem('dm_sburl',sburl);
+  if(sbanon){localStorage.setItem('dm_sbanon',sbanon);$('a_sbanon').value='';$('a_sbanon').placeholder='✅ Key saved';}
+  if(sg){localStorage.setItem('dm_sg',sg);$('a_sg').value='';$('a_sg').placeholder='✅ Key saved';}
+  showToast('💾 API keys saved','t-ok');
+}
+
+function updateSysInfo() {
+  if($('sys_model'))$('sys_model').textContent=getKey('dm_model')||'Not set';
+  if($('sys_db'))$('sys_db').textContent=db?'Supabase ✓':'Local Storage';
+  if($('sys_tx'))$('sys_tx').textContent=expenses.length;
+  if($('sys_mem'))$('sys_mem').textContent=memory.length;
+}
+
+function refreshAll() { refreshDash(); showToast('🔄 Refreshed','t-ok'); }
+function exportJSON() {
+  const blob=new Blob([JSON.stringify({expenses,settings:S,budgets:BUDGETS,goals,emgSaved:S.emgSaved},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`dataminobot-${today()}.json`; a.click();
+}
+function exportCSV() {
+  const rows=[['Date','Description','Category','Amount','Method','Notes'],...expenses.map(e=>[e.date,e.description,e.category,e.amount,e.method,e.notes])];
+  const csv=rows.map(r=>r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`dataminobot-${today()}.csv`; a.click();
+}
+function confirmClear() {
+  if(!confirm('Delete ALL expense data permanently?'))return;
+  if(!confirm('Absolutely sure? This cannot be undone.'))return;
+  expenses=[]; saveLocal();
+  if(db){try{db.from('dm_transactions').delete().neq('id',0);}catch(e){}}
+  refreshDash(); showToast('🗑 All data cleared','t-err');
+}
+
+// ── MODALS ────────────────────────────────────────
+function openAddModal(){$('addModal').classList.add('open');}
+function closeModal(id){$(id).classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
+
+// ── TOAST ─────────────────────────────────────────
+function showToast(msg,type='t-ok'){
+  const t=$('toast'); $('toastMsg').textContent=msg;
+  t.className='show '+type;
+  setTimeout(()=>t.className='',3800);
+}
+
+// ── KEYBOARD ──────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(e.key==='Enter'&&$('chatInp')===document.activeElement) sendChat();
+});
+$('chatInp')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
+
+// ── INIT ──────────────────────────────────────────
+(function() {
+  // Apply saved theme
+  const theme = localStorage.getItem('dm_theme');
+  if (theme) document.documentElement.setAttribute('data-theme', theme);
+
+  // Check if already set up
+  if (localStorage.getItem('dm_setup') === '1') {
+    $('setupScreen').style.display = 'none';
+    launchApp();
+  }
+  // Otherwise setup screen shows
+})();
+</script>
+</body>
+</html>
